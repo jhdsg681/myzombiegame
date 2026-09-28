@@ -53,26 +53,33 @@
             background-color: #00cc52;
         }
 
-        /* Secret Admin Corner Button */
+        /* Visible Control Panel Button */
         .admin-corner-btn {
             position: fixed;
-            top: 0;
-            right: 0;
-            width: 40px;
-            height: 40px;
-            background: transparent;
-            border: none;
-            cursor: default;
+            top: 20px;
+            right: 20px;
+            background: #2a2a2a;
+            border: 2px solid #444;
+            color: #00ff66;
+            padding: 10px 16px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            border-radius: 6px;
+            cursor: pointer;
             z-index: 9999;
+            transition: 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
-        /* Optional: Change background to a subtle color if you want to see it while testing */
         .admin-corner-btn:hover {
-            background: rgba(255, 255, 255, 0.05);
+            border-color: #00ff66;
+            background: #00ff66;
+            color: #000;
+            transform: scale(1.05);
         }
 
         /* Admin Area Panel */
         .admin-panel {
-            display: none; /* Hidden by default */
+            display: none;
             background-color: #111;
             border: 2px dashed #00ff66;
             border-radius: 10px;
@@ -86,72 +93,139 @@
             margin-top: 0;
         }
         .admin-panel input, .admin-panel button {
-            padding: 8px;
-            margin: 5px 0;
+            padding: 10px;
+            margin: 8px 0;
             border-radius: 4px;
             border: 1px solid #444;
+            box-sizing: border-box;
         }
-        .admin-panel input {
+        .admin-panel input[type="text"] {
             background: #222;
             color: #fff;
-            width: 90%;
+            width: 100%;
         }
         .admin-panel button {
             background: #00ff66;
             color: #000;
             font-weight: bold;
             cursor: pointer;
+            width: 100%;
         }
     </style>
 </head>
 <body>
 
-    <!-- Secret button in the exact top-right corner -->
-    <button class="admin-corner-btn" onclick="checkAdminPassword()" title="Secret Admin Menu"></button>
+    <!-- Visible Control Panel Button in the top-right corner -->
+    <button class="admin-corner-btn" onclick="checkAdminPassword()">🛠️ Control Panel</button>
 
     <h1>Welcome to My Arcade</h1>
     <p>Select a game to start playing instantly!</p>
 
     <!-- Game List Container -->
     <div class="arcade-container" id="gameContainer">
-
-        <!-- Game 1: Zombie Outbreak -->
+        <!-- Original Zombie Game -->
         <div class="game-card">
-            <h2>🧟‍♂️ Zombie Outbreak</h2>
-            <p>Fight off endless waves of zombies.</p>
+            <h2>🌍 Original Zombie</h2>
+            <p>Your main built-in game file.</p>
             <a href="zombie.html" class="play-button">Play Game</a>
         </div>
-
     </div>
 
     <!-- Hidden Admin Dashboard Area -->
     <div class="admin-panel" id="adminPanel">
         <h2>🛠️ Admin Control Panel</h2>
-        <p>You have successfully logged in as Admin.</p>
+        <p>Upload an HTML game file to instantly deploy it.</p>
         <hr style="border-color: #333;">
         
-        <h3>Quick Tools:</h3>
-        <ul>
-            <li>To add a game, upload your new game file (e.g., <code>snake.html</code>) to GitHub.</li>
-            <li>Edit this <code>index.html</code> on GitHub to copy and paste a new game card block inside the arcade-container.</li>
-        </ul>
-        <button onclick="document.getElementById('adminPanel').style.display='none'">Close Admin Panel</button>
+        <form id="uploadForm">
+            <label>Game Display Name:</label>
+            <input type="text" id="gameName" placeholder="e.g., Retro Snake" required>
+            
+            <label>Select Game HTML File:</label>
+            <input type="file" id="gameFile" accept=".html" required>
+            
+            <button type="submit" id="uploadBtn">Upload & Publish Game</button>
+        </form>
+        
+        <button style="background: #333; color: #fff; margin-top: 15px;" onclick="document.getElementById('adminPanel').style.display='none'">Close Admin Panel</button>
     </div>
 
     <script>
+        document.addEventListener("DOMContentLoaded", loadUploadedGames);
+
         function checkAdminPassword() {
-            // Prompts the user for the password
             var password = prompt("Enter Admin Password:");
-            
-            // Checks if the password matches 5867
             if (password === "5867") {
                 alert("Access Granted!");
                 document.getElementById('adminPanel').style.display = 'block';
-                // Scrolls down smoothly to the admin panel
                 document.getElementById('adminPanel').scrollIntoView({ behavior: 'smooth' });
             } else if (password !== null) {
                 alert("Incorrect password access denied.");
             }
+        }
+
+        // Handle Form Submission
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const uploadBtn = document.getElementById('uploadBtn');
+            uploadBtn.innerText = "Uploading... Please wait...";
+            uploadBtn.disabled = true;
+
+            const fileInput = document.getElementById('gameFile');
+            const nameInput = document.getElementById('gameName');
+
+            const formData = new FormData();
+            formData.append('gameFile', fileInput.files[0]);
+            formData.append('gameName', nameInput.value);
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert("Success! Game uploaded to Vercel.");
+                    
+                    const newGame = { name: nameInput.value, url: data.url };
+                    let currentGames = JSON.parse(localStorage.getItem('arcadeGames')) || [];
+                    currentGames.push(newGame);
+                    localStorage.setItem('arcadeGames', JSON.stringify(currentGames));
+
+                    addGameCard(newGame.name, newGame.url);
+                    
+                    document.getElementById('uploadForm').reset();
+                    document.getElementById('adminPanel').style.display = 'none';
+                } else {
+                    alert("Upload failed: " + data.error);
+                }
+            } catch (err) {
+                alert("Error connecting to upload server.");
+            } finally {
+                uploadBtn.innerText = "Upload & Publish Game";
+                uploadBtn.disabled = false;
+            }
+        });
+
+        function addGameCard(name, url) {
+            const container = document.getElementById('gameContainer');
+            const card = document.createElement('div');
+            card.className = 'game-card';
+            card.innerHTML = `
+                <h2>🎮 ${name}</h2>
+                <p>Custom user uploaded arcade game.</p>
+                <a href="${url}" class="play-button" target="_blank">Play Game</a>
+            `;
+            container.appendChild(card);
+        }
+
+        function loadUploadedGames() {
+            let currentGames = JSON.parse(localStorage.getItem('arcadeGames')) || [];
+            currentGames.forEach(game => {
+                addGameCard(game.name, game.url);
+            });
         }
     </script>
 
