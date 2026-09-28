@@ -99,7 +99,7 @@
             border: 1px solid #444;
             box-sizing: border-box;
         }
-        .admin-panel input[type="text"] {
+        .admin-panel input[type="text"], .admin-panel input[type="url"] {
             background: #222;
             color: #fff;
             width: 100%;
@@ -134,24 +134,25 @@
     <!-- Hidden Admin Dashboard Area -->
     <div class="admin-panel" id="adminPanel">
         <h2>🛠️ Admin Control Panel</h2>
-        <p>Upload an HTML game file to instantly deploy it.</p>
+        <p>Paste a game link below to instantly add it to your arcade dashboard.</p>
         <hr style="border-color: #333;">
         
-        <form id="uploadForm">
-            <label>Game Display Name:</label>
+        <form id="urlForm">
+            <label>Game Title Name:</label>
             <input type="text" id="gameName" placeholder="e.g., Retro Snake" required>
             
-            <label>Select Game HTML File:</label>
-            <input type="file" id="gameFile" accept=".html" required>
+            <label>Game Website Link (URL):</label>
+            <input type="url" id="gameUrl" placeholder="https://example.com" required>
             
-            <button type="submit" id="uploadBtn">Upload & Publish Game</button>
+            <button type="submit">Publish Game Card</button>
         </form>
         
         <button style="background: #333; color: #fff; margin-top: 15px;" onclick="document.getElementById('adminPanel').style.display='none'">Close Admin Panel</button>
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", loadUploadedGames);
+        // Load custom games from storage when the page opens
+        document.addEventListener("DOMContentLoaded", loadSavedGames);
 
         function checkAdminPassword() {
             var password = prompt("Enter Admin Password:");
@@ -164,64 +165,48 @@
             }
         }
 
-        // Handle Form Submission
-        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        // Handle URL Card Creation Submission
+        document.getElementById('urlForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const uploadBtn = document.getElementById('uploadBtn');
-            uploadBtn.innerText = "Uploading... Please wait...";
-            uploadBtn.disabled = true;
 
-            const fileInput = document.getElementById('gameFile');
             const nameInput = document.getElementById('gameName');
+            const urlInput = document.getElementById('gameUrl');
 
-            const formData = new FormData();
-            formData.append('gameFile', fileInput.files[0]);
-            formData.append('gameName', nameInput.value);
+            // 1. Create a structured game object
+            const newGame = { 
+                name: nameInput.value, 
+                url: urlInput.value 
+            };
 
-            try {
-                const response = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                });
+            // 2. Save the game link permanently into the browser memory
+            let currentGames = JSON.parse(localStorage.getItem('arcadeGames')) || [];
+            currentGames.push(newGame);
+            localStorage.setItem('arcadeGames', JSON.stringify(currentGames));
 
-                const data = await response.json();
-
-                if (response.ok) {
-                    alert("Success! Game uploaded to Vercel.");
-                    
-                    const newGame = { name: nameInput.value, url: data.url };
-                    let currentGames = JSON.parse(localStorage.getItem('arcadeGames')) || [];
-                    currentGames.push(newGame);
-                    localStorage.setItem('arcadeGames', JSON.stringify(currentGames));
-
-                    addGameCard(newGame.name, newGame.url);
-                    
-                    document.getElementById('uploadForm').reset();
-                    document.getElementById('adminPanel').style.display = 'none';
-                } else {
-                    alert("Upload failed: " + data.error);
-                }
-            } catch (err) {
-                alert("Error connecting to upload server.");
-            } finally {
-                uploadBtn.innerText = "Upload & Publish Game";
-                uploadBtn.disabled = false;
-            }
+            // 3. Build the card item on the screen
+            addGameCard(newGame.name, newGame.url);
+            
+            // 4. Reset interface and close dashboard
+            alert("Success! The game '" + newGame.name + "' has been published to your arcade grid.");
+            document.getElementById('urlForm').reset();
+            document.getElementById('adminPanel').style.display = 'none';
         });
 
+        // Function to automatically generate a clean index.html grid card
         function addGameCard(name, url) {
             const container = document.getElementById('gameContainer');
             const card = document.createElement('div');
             card.className = 'game-card';
             card.innerHTML = `
                 <h2>🎮 ${name}</h2>
-                <p>Custom user uploaded arcade game.</p>
+                <p>Linked network arcade game.</p>
                 <a href="${url}" class="play-button" target="_blank">Play Game</a>
             `;
             container.appendChild(card);
         }
 
-        function loadUploadedGames() {
+        // Pull stored items out of memory on boot
+        function loadSavedGames() {
             let currentGames = JSON.parse(localStorage.getItem('arcadeGames')) || [];
             currentGames.forEach(game => {
                 addGameCard(game.name, game.url);
