@@ -18,8 +18,42 @@
         h1 {
             color: #00ff66;
             font-size: 3rem;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
         }
+        
+        /* Announcements Section Style */
+        .announcement-board {
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+            background: #222;
+            border: 1px dashed #00ff66;
+            border-radius: 8px;
+            padding: 15px;
+            display: none; /* Hidden if there are no announcements */
+            text-align: left;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        .announcement-board h3 {
+            margin: 0 0 10px 0;
+            color: #00ff66;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .announcement-item-public {
+            background: #1a1a1a;
+            padding: 10px;
+            border-left: 3px solid #00ff66;
+            margin-bottom: 8px;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.95rem;
+            word-wrap: break-word;
+        }
+        .announcement-item-public:last-child {
+            margin-bottom: 0;
+        }
+
         .arcade-container {
             display: flex;
             justify-content: center;
@@ -77,7 +111,7 @@
             transform: scale(1.05);
         }
 
-        /* Admin Area Panel */
+        /* Admin Area Panel Layout */
         .admin-panel {
             display: none;
             background-color: #111;
@@ -92,17 +126,35 @@
             color: #00ff66;
             margin-top: 0;
         }
-        .admin-panel input, .admin-panel button {
+        .admin-panel h3 {
+            color: #00ff66;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+        .admin-section {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #2a2a2a;
+        }
+        .admin-panel input, .admin-panel textarea, .admin-panel button {
             padding: 10px;
             margin: 8px 0;
             border-radius: 4px;
             border: 1px solid #444;
             box-sizing: border-box;
         }
-        .admin-panel input[type="text"], .admin-panel input[type="url"] {
+        .admin-panel input[type="text"], .admin-panel input[type="url"], .admin-panel textarea {
             background: #222;
             color: #fff;
             width: 100%;
+        }
+        .admin-panel textarea {
+            resize: vertical;
+            height: 60px;
+            font-family: Arial, sans-serif;
         }
         .admin-panel button {
             background: #00ff66;
@@ -110,6 +162,36 @@
             font-weight: bold;
             cursor: pointer;
             width: 100%;
+        }
+
+        /* Control Panel Lists and Delete Buttons */
+        .admin-item-list {
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .admin-list-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #333;
+            font-size: 0.9rem;
+        }
+        .admin-list-row:last-child {
+            border-bottom: none;
+        }
+        .delete-btn {
+            background: #ff3333 !important;
+            color: #fff !important;
+            border: none !important;
+            padding: 4px 8px !important;
+            width: auto !important;
+            font-size: 0.75rem;
+            margin: 0 !important;
+        }
+        .delete-btn:hover {
+            background: #cc0000 !important;
         }
     </style>
 </head>
@@ -119,7 +201,13 @@
     <button class="admin-corner-btn" onclick="checkAdminPassword()">🛠️ Control Panel</button>
 
     <h1>Welcome to My Arcade</h1>
-    <p>Select a game to start playing instantly!</p>
+    <p style="margin-bottom: 25px;">Select a game to start playing instantly!</p>
+
+    <!-- Public Announcements Display Board -->
+    <div class="announcement-board" id="announcementBoard">
+        <h3>📢 Server Announcements</h3>
+        <div id="publicAnnouncementsList"></div>
+    </div>
 
     <!-- Game List Container -->
     <div class="arcade-container" id="gameContainer">
@@ -134,85 +222,81 @@
     <!-- Hidden Admin Dashboard Area -->
     <div class="admin-panel" id="adminPanel">
         <h2>🛠️ Admin Control Panel</h2>
-        <p>Paste a game link below to instantly add it to your arcade dashboard.</p>
-        <hr style="border-color: #333;">
+        <p style="color: #aaa; font-size: 0.9rem;">Manage games and global website announcements.</p>
         
-        <form id="urlForm">
-            <label>Game Title Name:</label>
-            <input type="text" id="gameName" placeholder="e.g., Retro Snake" required>
-            
-            <label>Game Website Link (URL):</label>
-            <input type="url" id="gameUrl" placeholder="https://example.com" required>
-            
-            <button type="submit">Publish Game Card</button>
-        </form>
+        <!-- SECTION 1: ANNOUNCEMENTS -->
+        <div class="admin-section">
+            <h3>📢 Post Announcement</h3>
+            <form id="announcementForm">
+                <textarea id="announcementText" placeholder="Type your text message announcement here..." required></textarea>
+                <button type="submit">Post Announcement</button>
+            </form>
+            <div class="admin-item-list" id="adminAnnouncementsList">
+                <!-- Running list of updates with delete hooks -->
+            </div>
+        </div>
         
-        <button style="background: #333; color: #fff; margin-top: 15px;" onclick="document.getElementById('adminPanel').style.display='none'">Close Admin Panel</button>
+        <!-- SECTION 2: ADDING GAMES -->
+        <div class="admin-section">
+            <h3>🎮 Add Game Card</h3>
+            <form id="urlForm">
+                <label>Game Title Name:</label>
+                <input type="text" id="gameName" placeholder="e.g., Retro Snake" required>
+                
+                <label>Game Website Link (URL):</label>
+                <input type="url" id="gameUrl" placeholder="https://example.com" required>
+                
+                <button type="submit">Publish Game Card</button>
+            </form>
+            <div class="admin-item-list" id="adminGameItems">
+                <!-- Running list of custom games with delete hooks -->
+            </div>
+        </div>
+        
+        <button style="background: #333; color: #fff; margin-top: 5px;" onclick="document.getElementById('adminPanel').style.display='none'">Close Admin Panel</button>
     </div>
 
     <script>
-        // Load custom games from storage when the page opens
-        document.addEventListener("DOMContentLoaded", loadSavedGames);
+        // Load custom data from storage when the page opens
+        document.addEventListener("DOMContentLoaded", function() {
+            loadSavedGames();
+            loadSavedAnnouncements();
+        });
 
         function checkAdminPassword() {
             var password = prompt("Enter Admin Password:");
             if (password === "5867") {
                 alert("Access Granted!");
                 document.getElementById('adminPanel').style.display = 'block';
+                updateAdminGameList(); 
+                updateAdminAnnouncementList();
                 document.getElementById('adminPanel').scrollIntoView({ behavior: 'smooth' });
             } else if (password !== null) {
                 alert("Incorrect password access denied.");
             }
         }
 
-        // Handle URL Card Creation Submission
-        document.getElementById('urlForm').addEventListener('submit', function(e) {
+        /* ---------------------------------
+           ANNOUNCEMENTS LOGIC INTERFACES
+           --------------------------------- */
+        document.getElementById('announcementForm').addEventListener('submit', function(e) {
             e.preventDefault();
-
-            const nameInput = document.getElementById('gameName');
-            const urlInput = document.getElementById('gameUrl');
-
-            // 1. Create a structured game object
-            const newGame = { 
-                name: nameInput.value, 
-                url: urlInput.value 
+            const textInput = document.getElementById('announcementText');
+            
+            const newAnnouncement = {
+                id: Date.now(),
+                text: textInput.value
             };
 
-            // 2. Save the game link permanently into the browser memory
-            let currentGames = JSON.parse(localStorage.getItem('arcadeGames')) || [];
-            currentGames.push(newGame);
-            localStorage.setItem('arcadeGames', JSON.stringify(currentGames));
+            let currentAnnouncements = JSON.parse(localStorage.getItem('arcadeAnnouncements')) || [];
+            currentAnnouncements.push(newAnnouncement);
+            localStorage.setItem('arcadeAnnouncements', JSON.stringify(currentAnnouncements));
 
-            // 3. Build the card item on the screen
-            addGameCard(newGame.name, newGame.url);
+            addPublicAnnouncementUI(newAnnouncement.id, newAnnouncement.text);
+            updateAdminAnnouncementList();
             
-            // 4. Reset interface and close dashboard
-            alert("Success! The game '" + newGame.name + "' has been published to your arcade grid.");
-            document.getElementById('urlForm').reset();
-            document.getElementById('adminPanel').style.display = 'none';
+            textInput.value = '';
+            alert("Announcement posted successfully!");
         });
 
-        // Function to automatically generate a clean index.html grid card
-        function addGameCard(name, url) {
-            const container = document.getElementById('gameContainer');
-            const card = document.createElement('div');
-            card.className = 'game-card';
-            card.innerHTML = `
-                <h2>🎮 ${name}</h2>
-                <p>Linked network arcade game.</p>
-                <a href="${url}" class="play-button" target="_blank">Play Game</a>
-            `;
-            container.appendChild(card);
-        }
 
-        // Pull stored items out of memory on boot
-        function loadSavedGames() {
-            let currentGames = JSON.parse(localStorage.getItem('arcadeGames')) || [];
-            currentGames.forEach(game => {
-                addGameCard(game.name, game.url);
-            });
-        }
-    </script>
-
-</body>
-</html>
