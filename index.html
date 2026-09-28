@@ -3,141 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arcade Game Hub</title>
+    <title>My Game Arcade</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121212;
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
             color: #ffffff;
+            text-align: center;
+            padding: 50px;
             margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+            position: relative;
+            min-height: 90vh;
         }
-
-        header {
-            margin-top: 40px;
-            text-align: center;
-        }
-
         h1 {
-            font-size: 2.5rem;
             color: #00ff66;
-            text-shadow: 0 0 10px rgba(0, 255, 102, 0.3);
-            margin-bottom: 10px;
-        }
-
-        p {
-            color: #aaaaaa;
-            font-size: 1.1rem;
-        }
-
-        .game-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 30px;
-            max-width: 1000px;
-            margin-top: 40px;
-            padding: 20px;
-        }
-
-        .game-card {
-            background-color: #1e1e1e;
-            border: 2px solid #333;
-            border-radius: 12px;
-            width: 280px;
-            padding: 20px;
-            text-align: center;
-            transition: transform 0.3s ease, border-color 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-
-        .game-card:hover {
-            transform: translateY(-5px);
-            border-color: #00ff66;
-        }
-
-        .game-icon {
             font-size: 3rem;
-            margin-bottom: 15px;
+            margin-bottom: 30px;
         }
-
-        .game-title {
-            font-size: 1.4rem;
-            margin: 10px 0;
-            color: #ffffff;
+        .arcade-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
         }
-
-        .game-desc {
-            color: #bbbbbb;
-            font-size: 0.9rem;
-            height: 60px;
-            margin-bottom: 20px;
+        .game-card {
+            background-color: #2a2a2a;
+            border: 2px solid #444;
+            border-radius: 10px;
+            padding: 20px;
+            width: 200px;
+            transition: 0.3s;
         }
-
-        .play-btn {
+        .game-card:hover {
+            border-color: #00ff66;
+            transform: scale(1.05);
+        }
+        .play-button {
             display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
             background-color: #00ff66;
-            color: #121212;
+            color: #000;
             text-decoration: none;
-            padding: 10px 25px;
             font-weight: bold;
-            border-radius: 6px;
-            transition: background-color 0.2s ease;
+            border-radius: 5px;
         }
-
-        .play-btn:hover {
+        .play-button:hover {
             background-color: #00cc52;
         }
 
-        .disabled {
-            background-color: #444;
-            color: #777;
-            cursor: not-allowed;
+        /* Secret Admin Corner Button */
+        .admin-corner-btn {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border: none;
+            cursor: default;
+            z-index: 9999;
         }
-        .disabled:hover {
-            background-color: #444;
+        /* Optional: Change background to a subtle color if you want to see it while testing */
+        .admin-corner-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Admin Area Panel */
+        .admin-panel {
+            display: none; /* Hidden by default */
+            background-color: #111;
+            border: 2px dashed #00ff66;
+            border-radius: 10px;
+            max-width: 500px;
+            margin: 40px auto 0 auto;
+            padding: 20px;
+            text-align: left;
+        }
+        .admin-panel h2 {
+            color: #00ff66;
+            margin-top: 0;
+        }
+        .admin-panel input, .admin-panel button {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border: 1px solid #444;
+        }
+        .admin-panel input {
+            background: #222;
+            color: #fff;
+            width: 90%;
+        }
+        .admin-panel button {
+            background: #00ff66;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>My Arcade Hub</h1>
-        <p>Select a game from the collection below to start playing!</p>
-    </header>
+    <!-- Secret button in the exact top-right corner -->
+    <button class="admin-corner-btn" onclick="checkAdminPassword()" title="Secret Admin Menu"></button>
 
-    <div class="game-container">
+    <h1>Welcome to My Arcade</h1>
+    <p>Select a game to start playing instantly!</p>
+
+    <!-- Game List Container -->
+    <div class="arcade-container" id="gameContainer">
 
         <!-- Game 1: Zombie Outbreak -->
         <div class="game-card">
-            <div class="game-icon">🧟‍♂️</div>
-            <div class="game-title">Zombie Outbreak</div>
-            <div class="game-desc">Survive as long as possible and eliminate the incoming waves of the undead.</div>
-            <!-- Points to your renamed zombie game file -->
-            <a href="zombie.html" class="play-btn">Play Now</a>
-        </div>
-
-        <!-- Game 2: Placeholder for your next game -->
-        <div class="game-card">
-            <div class="game-icon">🚀</div>
-            <div class="game-title">Space Shooter</div>
-            <div class="game-desc">Defend the galaxy against incoming alien armadas. Coming soon!</div>
-            <a href="#" class="play-btn disabled">Locked</a>
-        </div>
-
-        <!-- Game 3: Placeholder for your next game -->
-        <div class="game-card">
-            <div class="game-icon">🧩</div>
-            <div class="game-title">Puzzle Blocks</div>
-            <div class="game-desc">Match shapes and clear lines in this classic strategy puzzle. Coming soon!</div>
-            <a href="#" class="play-btn disabled">Locked</a>
+            <h2>🧟‍♂️ Zombie Outbreak</h2>
+            <p>Fight off endless waves of zombies.</p>
+            <a href="zombie.html" class="play-button">Play Game</a>
         </div>
 
     </div>
+
+    <!-- Hidden Admin Dashboard Area -->
+    <div class="admin-panel" id="adminPanel">
+        <h2>🛠️ Admin Control Panel</h2>
+        <p>You have successfully logged in as Admin.</p>
+        <hr style="border-color: #333;">
+        
+        <h3>Quick Tools:</h3>
+        <ul>
+            <li>To add a game, upload your new game file (e.g., <code>snake.html</code>) to GitHub.</li>
+            <li>Edit this <code>index.html</code> on GitHub to copy and paste a new game card block inside the arcade-container.</li>
+        </ul>
+        <button onclick="document.getElementById('adminPanel').style.display='none'">Close Admin Panel</button>
+    </div>
+
+    <script>
+        function checkAdminPassword() {
+            // Prompts the user for the password
+            var password = prompt("Enter Admin Password:");
+            
+            // Checks if the password matches 5867
+            if (password === "5867") {
+                alert("Access Granted!");
+                document.getElementById('adminPanel').style.display = 'block';
+                // Scrolls down smoothly to the admin panel
+                document.getElementById('adminPanel').scrollIntoView({ behavior: 'smooth' });
+            } else if (password !== null) {
+                alert("Incorrect password access denied.");
+            }
+        }
+    </script>
 
 </body>
 </html>
