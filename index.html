@@ -413,3 +413,21 @@
     </script>
 </body>
 </html>
+    <script>
+        let announcements = JSON.parse(localStorage.getItem('v_announcements')) || [];
+        
+        // HARDCODED GLOBAL GAMES BANK (Visible to everyone globally)
+        let customGames = JSON.parse(localStorage.getItem('v_games')) || [
+            { 
+                id: 101, 
+                title: "Omega Pearl Fight: FINALE", 
+                code: encodeURIComponent(`<!DOCTYPE html><html><head><style>body{background:#000;color:#fff;font-family:sans-serif;text-align:center;padding-top:100px;}h1{color:#ffde59;}.btn{background:#ff2e63;color:white;border:none;padding:10px 20px;cursor:pointer;font-weight:bold;}</style></head><body><h1>Omega Pearl Fight: FINALE</h1><p>Arena parameters loaded successfully.</p><br><button class="btn" onclick="alert('Encounter Started')">Engage Boss</button></body></html>`), 
+                type: "global" 
+            },
+            {
+                id: 102,
+                title: "Zombie Outbreak Survival",
+                code: encodeURIComponent(`<!DOCTYPE html><html><head><title>Zombie Game</title><style>body{margin:0;background:#111;color:#fff;font-family:sans-serif;text-align:center;}canvas{background:#000;display:block;margin:10px auto;border:2px solid #ff2e63;}</style></head><body><h2>Zombie Outbreak</h2><p id="ui">HP: 100 | Score: 0 | Wave: 1 | Ammo: 12/12</p><canvas id="c" width="600" height="400"></canvas><p>Move: WASD/Arrows | Shoot: Click Mouse</p><script>const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');let hp=100,score=0,wave=1,ammo=12,px=300,py=200,mx=0,my=0,keys={},bullets=[],zombies=[];window.addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();mx=e.clientX-r.left;my=e.clientY-r.top;});canvas.addEventListener('mousedown',()=>{if(ammo>0){ammo--;bullets.push({x:px,y:py,a:Math.atan2(my-py,mx-px)});if(ammo===0)setTimeout(()=>{ammo=12;},1200);}});function spawn(){if(zombies.length<wave*3&&Math.random()<0.03){let e=Math.floor(Math.random()*4),x,y;if(e===0){x=Math.random()*600;y=-10;}else if(e===1){x=610;y=Math.random()*400;}else if(e===2){x=Math.random()*600;y=410;}else{x=-10;y=Math.random()*400;}zombies.push({x:x,y:y,hp:50});}}function tick(){ctx.clearRect(0,0,600,400);if(hp<=0){ctx.fillStyle='red';ctx.font='30px sans-serif';ctx.fillText('GAME OVER',220,200);return;}let dx=0,dy=0;if(keys['w']||keys['arrowup'])dy-=3;if(keys['s']||keys['arrowdown'])dy+=3;if(keys['a']||keys['arrowleft'])dx-=3;if(keys['d']||keys['arrowright'])dx+=3;px=Math.max(15,Math.min(585,px+dx));py=Math.max(15,Math.min(385,py+dy));ctx.fillStyle='#00adb5';ctx.beginPath();ctx.arc(px,py,15,0,Math.PI*2);ctx.fill();spawn();for(let b=bullets.length-1;b>=0;b--){let bl=bullets[b];bl.x+=Math.cos(bl.a)*8;bl.y+=Math.sin(bl.a)*8;ctx.fillStyle='#ffde59';ctx.beginPath();ctx.arc(bl.x,bl.y,4,0,Math.PI*2);ctx.fill();if(bl.x<0||bl.x>600||bl.y<0||bl.y>400){bullets.splice(b,1);continue;}for(let z=zombies.length-1;z>=0;z--){if(Math.hypot(bl.x-zombies[z].x,bl.y-zombies[z].y)<20){zombies[z].hp-=35;bullets.splice(b,1);if(zombies[z].hp<=0){zombies.splice(z,1);score+=25;if(score%100===0)wave++;}break;}}}for(let z=zombies.length-1;z>=0;z--){let zm=zombies[z];let a=Math.atan2(py-zm.y,px-zm.x);zm.x+=Math.cos(a)*1.5;zm.y+=Math.sin(a)*1.5;ctx.fillStyle='#4e9f3d';ctx.beginPath();ctx.arc(zm.x,zm.y,12,0,Math.PI*2);ctx.fill();if(Math.hypot(px-zm.x,py-zm.y)<27){hp--;}}document.getElementById('ui').innerText='HP: '+hp+' | Score: '+score+' | Wave: '+wave+' | Ammo: '+ammo+'/12';requestAnimationFrame(tick);}tick();<\/script></body></html>`),
+                type: "global"
+            }
+        ];
