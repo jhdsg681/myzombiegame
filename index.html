@@ -134,3 +134,137 @@
     </script>
 </body>
 </html>
+    <script>
+        let announcements = JSON.parse(localStorage.getItem('v_announcements')) || [];
+        let customGames = JSON.parse(localStorage.getItem('v_games')) || [
+            { id: 101, title: "Omega Pearl Fight: FINALE", code: `<!DOCTYPE html><html><head><style>body{background:#000;color:%23fff;font-family:sans-serif;text-align:center;padding-top:100px;}h1{color:%23ffde59;}.btn{background:%23ff2e63;color:white;border:none;padding:10px%2020px;cursor:pointer;font-weight:bold;}</style></head><body><h1>Omega Pearl Fight: FINALE</h1><p>Arena parameters loaded successfully.</p><br><button class="btn" onclick="alert(%27Encounter%20Started%27)">Engage Boss</button></body></html>`, type: "global" }
+        ];
+        let isAdminAuthenticated = false;
+        let isGameMenuUnlocked = false;
+
+        const tx = document.getElementById('editor-textarea');
+        const pv = document.getElementById('editor-preview');
+
+        tx.value = `<!DOCTYPE html>\n<html>\n<body style="background:#222;color:#fff;font-family:sans-serif;text-align:center;padding-top:50px;">\n  <h1 style="color:#00adb5;">Live Code Playground</h1>\n</body>\n</html>`;
+        pv.srcdoc = tx.value;
+        tx.addEventListener('input', () => { pv.srcdoc = tx.value; });
+
+        function saveState() {
+            localStorage.setItem('v_announcements', JSON.stringify(announcements));
+            localStorage.setItem('v_games', JSON.stringify(customGames));
+        }
+
+        function switchTab(name) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active-panel'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`panel-${name}`).classList.add('active-panel');
+            if (window.event) window.event.currentTarget.classList.add('active');
+            if(name === 'games') closeGamePlayer();
+        }
+
+        function checkGameAuth() {
+            if(document.getElementById('game-pass').value === "6767") {
+                isGameMenuUnlocked = true;
+                document.getElementById('game-auth').style.display = 'none';
+                document.getElementById('game-library-view').style.display = 'block';
+                renderGlobalViews();
+            } else { alert("Incorrect Game Password Access Denied."); }
+        }
+
+        function checkAdminAuth() {
+            if(document.getElementById('admin-pass').value === "5867") {
+                isAdminAuthenticated = true;
+                document.getElementById('admin-auth').style.display = 'none';
+                document.getElementById('admin-dashboard').style.display = 'block';
+                renderAdminControls();
+            } else { alert("Access Denied"); }
+        }
+
+        function toggleUserUploadForm() {
+            const f = document.getElementById('user-upload-card');
+            f.style.display = f.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function renderGlobalViews() {
+            const banner = document.getElementById('announcement-banner');
+            banner.style.display = announcements.length === 0 ? 'none' : 'flex';
+            banner.innerHTML = announcements.map(a => `<div class="announcement-item"><span>📢 ${a.text}</span></div>`).join('');
+            
+            if (!isGameMenuUnlocked) return;
+            const grid = document.getElementById('games-grid');
+            if (grid) {
+                grid.innerHTML = customGames.map(g => {
+                    let privateTag = g.type === 'local' ? '<span style="font-size:11px;color:#00adb5;">(Private)</span>' : '';
+                    let deleteBtn = g.type === 'local' ? '<button class="btn btn-danger btn-small" onclick="deleteUserGame(' + g.id + ')">X</button>' : '';
+                    return '<div class="game-card">' +
+                        '<div class="game-title">' + g.title + ' ' + privateTag + '</div>' +
+                        '<div style="display:flex;gap:10px;">' +
+                            '<button class="btn" style="flex:1;" onclick="launchGamePlayer(' + g.id + ')">Play</button>' +
+                            deleteBtn +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            }
+        }
+
+        function renderAdminControls() {
+            if(!isAdminAuthenticated) return;
+            document.getElementById('admin-announcements-list').innerHTML = announcements.map(a => `<div class="admin-list-item"><span>${a.text}</span><button class="btn btn-small btn-danger" onclick="deleteAnnouncement(${a.id})">Delete</button></div>`).join('');
+            const globals = customGames.filter(g => g.type !== 'local');
+            document.getElementById('admin-games-list').innerHTML = globals.map(g => `<div class="admin-list-item"><span>🎮 ${g.title}</span><button class="btn btn-small btn-danger" onclick="deleteGame(${g.id})">Remove</button></div>`).join('');
+        }
+
+        function postAnnouncement() {
+            const input = document.getElementById('new-announcement'); if(!input.value.trim()) return;
+            announcements.push({ id: Date.now(), text: input.value });
+            input.value = ''; saveState(); renderGlobalViews(); renderAdminControls();
+        }
+
+        function deleteAnnouncement(id) {
+            announcements = announcements.filter(a => a.id !== id);
+            saveState(); renderGlobalViews(); renderAdminControls();
+        }
+
+        function publishGame() {
+            const t = document.getElementById('game-name'), c = document.getElementById('game-code');
+            if(!t.value.trim() || !c.value.trim()) return;
+            customGames.push({ id: Date.now(), title: t.value, code: encodeURIComponent(c.value), type: "global" });
+            t.value = ''; c.value = ''; saveState(); renderGlobalViews(); renderAdminControls();
+            alert("Global Game Published!");
+        }
+
+        function userPublishGame() {
+            const t = document.getElementById('user-game-name'), c = document.getElementById('user-game-code');
+            if(!t.value.trim() || !c.value.trim()) return;
+            customGames.push({ id: Date.now(), title: t.value, code: encodeURIComponent(c.value), type: "local" });
+            t.value = ''; c.value = ''; toggleUserUploadForm(); saveState(); renderGlobalViews();
+            alert("Game saved locally to this computer!");
+        }
+
+        function deleteGame(id) {
+            customGames = customGames.filter(g => g.id !== id);
+            saveState(); renderAdminControls();
+        }
+
+        function deleteUserGame(id) {
+            customGames = customGames.filter(g => g.id !== id);
+            saveState(); renderGlobalViews();
+        }
+
+        function launchGamePlayer(id) {
+            const g = customGames.find(x => x.id === id); if(!g) return;
+            document.getElementById('game-library-view').style.display = 'none';
+            document.getElementById('game-player-view').style.display = 'flex';
+            document.getElementById('playing-game-title').innerText = `Running: ${g.title}`;
+            document.getElementById('game-playback-frame').srcdoc = decodeURIComponent(g.code);
+        }
+
+        function closeGamePlayer() {
+            document.getElementById('game-player-view').style.display = 'none';
+            document.getElementById('game-library-view').style.display = 'block';
+            document.getElementById('game-playback-frame').srcdoc = "";
+        }
+        renderGlobalViews();
+    </script>
+</body>
+</html>
