@@ -9,7 +9,7 @@
         body { font-family: 'Segoe UI', Tahoma, sans-serif; display: flex; height: 100vh; background-color: #121212; color: #e0e0e0; overflow: hidden; }
         .sidebar { width: 260px; background-color: #1e1e1e; display: flex; flex-direction: column; border-right: 1px solid #2d2d2d; padding: 20px 10px; }
         .sidebar-brand { font-size: 20px; font-weight: bold; color: #00adb5; text-align: center; margin-bottom: 30px; letter-spacing: 1px; }
-        .nav-btn { background: none; border: none; color: #aaaaaa; padding: 12px 15px; text-align: left; font-size: 15px; cursor: pointer; border-radius: 6px; margin-bottom: 8px; transition: all 0.2s ease; }
+        .nav-btn { background: none; border: none; color: #aaaaaa; padding: 12px 15px; text-align: left; font-size: 15px; cursor: pointer; border-radius: 6px; margin-bottom: 8px; width: 100%; }
         .nav-btn:hover, .nav-btn.active { background-color: #2d2d2d; color: #ffffff; }
         .nav-btn.active { border-left: 4px solid #00adb5; background-color: #252525; }
         .main-content { flex: 1; display: flex; flex-direction: column; height: 100%; background-color: #121212; }
@@ -27,7 +27,7 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 8px; font-size: 14px; color: #aaaaaa; }
         input[type="text"], input[type="password"], textarea.form-input { width: 100%; padding: 10px; background-color: #181818; border: 1px solid #3a3a3a; border-radius: 4px; color: #ffffff; font-size: 14px; }
-        .btn { background-color: #00adb5; color: #ffffff; border: none; padding: 10px 20px; font-size: 14px; font-weight: 600; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+        .btn { background-color: #00adb5; color: #ffffff; border: none; padding: 10px 20px; font-size: 14px; font-weight: 600; border-radius: 4px; cursor: pointer; }
         .btn:hover { background-color: #008c9e; }
         .btn-danger { background-color: #ff2e63; }
         .btn-small { padding: 4px 8px; font-size: 12px; }
@@ -48,13 +48,12 @@
     </div>
     <div class="main-content">
         <div class="announcement-banner" id="announcement-banner"></div>
-        <!-- HTML EDITOR PANEL -->
         <div id="panel-editor" class="tab-panel active-panel">
             <h2>Live HTML Workspace</h2>
             <div class="editor-container">
                 <div class="editor-box">
                     <div class="box-header">Source Code (HTML/CSS/JS)</div>
-                    <textarea id="editor-textarea" placeholder="Write your code here..."></textarea>
+                    <textarea id="editor-textarea"></textarea>
                 </div>
                 <div class="preview-box">
                     <div class="box-header">Live Output View</div>
@@ -62,8 +61,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- HOSTED GAMES PANEL -->
         <div id="panel-games" class="tab-panel">
             <div id="games-list-view" style="width: 100%;">
                 <h2>Community Hosted Games</h2>
@@ -77,74 +74,54 @@
                 <iframe id="game-playback-frame" style="flex: 1; background: #fff;"> </iframe>
             </div>
         </div>
-
-        <!-- ADMIN PANEL -->
         <div id="panel-admin" class="tab-panel">
             <h2>Administrator Controls</h2>
             <div id="admin-auth" class="card">
-                <div class="form-group">
-                    <label for="admin-pass">Enter Security Password:</label>
-                    <input type="password" id="admin-pass" placeholder="••••">
-                </div>
+                <div class="form-group"><label>Enter Password:</label><input type="password" id="admin-pass" placeholder="••••"></div>
                 <button class="btn" onclick="checkAdminAuth()">Unlock Panel</button>
             </div>
             <div id="admin-dashboard" style="display: none; width: 100%;">
                 <div class="card">
-                    <h3>Post Global Announcement</h3>
-                    <div class="form-group" style="margin-top: 15px;">
-                        <input type="text" id="new-announcement" placeholder="Type notice here...">
-                    </div>
+                    <h3>Post Announcement</h3>
+                    <div class="form-group" style="margin-top: 15px;"><input type="text" id="new-announcement" placeholder="Type notice..."></div>
                     <button class="btn" onclick="postAnnouncement()">Broadcast Notice</button>
                 </div>
                 <div class="card">
                     <h3>Publish Custom HTML Game</h3>
-                    <div class="form-group" style="margin-top: 15px;">
-                        <label>Game Title</label>
-                        <input type="text" id="game-name" placeholder="e.g., Retro Game">
-                    </div>
-                    <div class="form-group">
-                        <label>Source Code</label>
-                        <textarea id="game-code" class="form-input" style="height: 120px;" placeholder="<!DOCTYPE html>..."></textarea>
-                    </div>
+                    <div class="form-group" style="margin-top: 15px;"><label>Game Title</label><input type="text" id="game-name" placeholder="e.g., Retro Game"></div>
+                    <div class="form-group"><label>HTML / CSS / JS Code</label><textarea id="game-code" class="form-input" style="height: 120px;" placeholder="<!DOCTYPE html>..."></textarea></div>
                     <button class="btn" onclick="publishGame()">Deploy Game</button>
                 </div>
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                    <div class="card" style="flex: 1; min-width: 250px;">
-                        <h3>Announcements</h3>
-                        <div id="admin-announcements-list" style="margin-top: 15px;"></div>
-                    </div>
-                    <div class="card" style="flex: 1; min-width: 250px;">
-                        <h3>Uploaded Games</h3>
-                        <div id="admin-games-list" style="margin-top: 15px;"></div>
-                    </div>
+                    <div class="card" style="flex: 1; min-width: 250px;"><h3>Active Announcements</h3><div id="admin-announcements-list" style="margin-top: 15px;"></div></div>
+                    <div class="card" style="flex: 1; min-width: 250px;"><h3>Active Hosted Games</h3><div id="admin-games-list" style="margin-top: 15px;"></div></div>
                 </div>
             </div>
         </div>
     </div>
     <script>
-        let announcements = [], customGames = [], isAdminAuthenticated = false;
-        const editorTextarea = document.getElementById('editor-textarea');
-        const editorPreview = document.getElementById('editor-preview');
+        let announcements = JSON.parse(localStorage.getItem('v_announcements')) || [];
+        let customGames = JSON.parse(localStorage.getItem('v_games')) || [];
+        let isAdminAuthenticated = false;
 
-        editorTextarea.value = `<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { font-family: sans-serif; text-align: center; padding-top: 40px; background: #222; color: #fff; }\n  h1 { color: #00adb5; }\n</style>\n</head>\n<body>\n  <h1>Live Code Playground</h1>\n</body>\n</html>`;
-        editorPreview.srcdoc = editorTextarea.value;
-        editorTextarea.addEventListener('input', () => { editorPreview.srcdoc = editorTextarea.value; });
+        const tx = document.getElementById('editor-textarea');
+        const pv = document.getElementById('editor-preview');
 
-        async function loadServerData() {
-            try {
-                const res = await fetch('/api/data');
-                const data = await res.json();
-                announcements = data.announcements; customGames = data.customGames;
-                renderGlobalViews(); renderAdminControls();
-            } catch (e) { console.error("Database offline", e); }
+        tx.value = `<!DOCTYPE html>\n<html>\n<body style="background:#222;color:#fff;font-family:sans-serif;text-align:center;padding-top:50px;">\n  <h1 style="color:#00adb5;">Live Code Playground</h1>\n</body>\n</html>`;
+        pv.srcdoc = tx.value;
+        tx.addEventListener('input', () => { pv.srcdoc = tx.value; });
+
+        function saveState() {
+            localStorage.setItem('v_announcements', JSON.stringify(announcements));
+            localStorage.setItem('v_games', JSON.stringify(customGames));
         }
 
-        function switchTab(tabName) {
+        function switchTab(name) {
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active-panel'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`panel-${tabName}`).classList.add('active-panel');
+            document.getElementById(`panel-${name}`).classList.add('active-panel');
             if (window.event) window.event.currentTarget.classList.add('active');
-            if(tabName === 'games') closeGamePlayer();
+            if(name === 'games') closeGamePlayer();
         }
 
         function checkAdminAuth() {
@@ -160,37 +137,39 @@
             const banner = document.getElementById('announcement-banner');
             banner.style.display = announcements.length === 0 ? 'none' : 'flex';
             banner.innerHTML = announcements.map(a => `<div class="announcement-item"><span>📢 ${a.text}</span></div>`).join('');
-            
             const grid = document.getElementById('games-grid');
-            if (grid) {
-                grid.innerHTML = customGames.map(g => `<div class="game-card"><div class="game-title">${g.title}</div><button class="btn" onclick="launchGamePlayer(${g.id})">Launch Game</button></div>`).join('');
-            }
+            if (grid) grid.innerHTML = customGames.map(g => `<div class="game-card"><div class="game-title">${g.title}</div><button class="btn" onclick="launchGamePlayer(${g.id})">Launch Game</button></div>`).join('');
         }
 
         function renderAdminControls() {
             if(!isAdminAuthenticated) return;
-            document.getElementById('admin-announcements-list').innerHTML = announcements.map(a => `
-                <div class="admin-list-item"><span>${a.text}</span><button class="btn btn-small btn-danger" onclick="deleteAnnouncement(${a.id})">Delete</button></div>`).join('');
-            document.getElementById('admin-games-list').innerHTML = customGames.map(g => `
-                <div class="admin-list-item"><span>🎮 ${g.title}</span><button class="btn btn-small btn-danger" onclick="deleteGame(${g.id})">Remove</button></div>`).join('');
+            document.getElementById('admin-announcements-list').innerHTML = announcements.map(a => `<div class="admin-list-item"><span>${a.text}</span><button class="btn btn-small btn-danger" onclick="deleteAnnouncement(${a.id})">Delete</button></div>`).join('');
+            document.getElementById('admin-games-list').innerHTML = customGames.map(g => `<div class="admin-list-item"><span>🎮 ${g.title}</span><button class="btn btn-small btn-danger" onclick="deleteGame(${g.id})">Remove</button></div>`).join('');
         }
 
-        async function postAnnouncement() {
+        function postAnnouncement() {
             const input = document.getElementById('new-announcement'); if(!input.value.trim()) return;
-            await fetch('/api/announcements', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: input.value }) });
-            input.value = ''; loadServerData();
+            announcements.push({ id: Date.now(), text: input.value });
+            input.value = ''; saveState(); renderGlobalViews(); renderAdminControls();
         }
 
-        async function deleteAnnouncement(id) { await fetch(`/api/announcements/${id}`, { method: 'DELETE' }); loadServerData(); }
+        function deleteAnnouncement(id) {
+            announcements = announcements.filter(a => a.id !== id);
+            saveState(); renderGlobalViews(); renderAdminControls();
+        }
 
-        async function publishGame() {
+        function publishGame() {
             const t = document.getElementById('game-name'), c = document.getElementById('game-code');
             if(!t.value.trim() || !c.value.trim()) return;
-            await fetch('/api/games', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: t.value, code: c.value }) });
-            t.value = ''; c.value = ''; loadServerData(); alert("Game Published!");
+            customGames.push({ id: Date.now(), title: t.value, code: c.value });
+            t.value = ''; c.value = ''; saveState(); renderGlobalViews(); renderAdminControls();
+            alert("Game Published!");
         }
 
-        async function deleteGame(id) { await fetch(`/api/games/${id}`, { method: 'DELETE' }); loadServerData(); }
+        function deleteGame(id) {
+            customGames = customGames.filter(g => g.id !== id);
+            saveState(); renderGlobalViews(); renderAdminControls();
+        }
 
         function launchGamePlayer(id) {
             const g = customGames.find(x => x.id === id); if(!g) return;
@@ -205,7 +184,7 @@
             document.getElementById('games-list-view').style.display = 'block';
             document.getElementById('game-playback-frame').srcdoc = "";
         }
-        loadServerData();
+        renderGlobalViews();
     </script>
 </body>
 </html>
