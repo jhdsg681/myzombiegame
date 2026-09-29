@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcade Hub & HTML Editor</title>
+    <style>
+        :root {
+            --bg-dark: #0f111a;
+            --bg-panel: #161925;
+            --bg-editor: #0b0c10;
+            --accent: #00adb5;
+            --accent-hover: #008c9e;
+            --text-main: #f1f1f1;
+            --text-muted: #8f93a2;
+            --danger: #ff2e63;
+            --border: #23283d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            height: 100vh;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 260px;
+            background-color: var(--bg-panel);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            z-index: 10;
+        }
+
+        .sidebar-brand {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--accent);
+            text-align: center;
+            margin-bottom: 36px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-btn:hover {
+            background-color: rgba(255, 255, 255, 0.04);
+            color: var(--text-main);
+        }
+
+        .nav-btn.active {
+            background-color: rgba(0, 173, 181, 0.15);
+            color: var(--accent);
+        }
+
+        /* Main Workspace Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: var(--bg-dark);
+            position: relative;
+        }
+
+        /* Live System Announcement Strip */
+        .announcement-banner {
+            background-color: #1a1e2e;
+            border-bottom: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 160px;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .announcement-item {
+            background-color: var(--bg-panel);
+            padding: 10px 16px;
+            border-radius: 6px;
+            border-left: 4px solid var(--accent);
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Base Tab View Panels */
+        .tab-panel {
+            display: none;
+            flex: 1;
+            height: 100%;
+            overflow-y: auto;
+            padding: 32px;
+        }
+
+        .tab-panel.active-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            margin-bottom: 24px;
+            color: #ffffff;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 18px;
+            color: #ffffff;
+        }
+
+        /* HTML Editor Component Layout */
+        .editor-container {
+            display: flex;
+            flex: 1;
+            gap: 24px;
+            height: 100%;
+            min-height: 0;
+            margin-bottom: 16px;
+        }
+
+        .editor-box, .preview-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.24);
+        }
+
+        .box-header {
+            background-color: rgba(255, 255, 255, 0.02);
+            padding: 12px 20px;
+            font-size: 13px;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        textarea {
+            flex: 1;
+            background-color: var(--bg-editor);
+            color: #a6accd;
+            border: none;
+            padding: 20px;
+            font-family: 'Fira Code', 'Courier New', Courier, monospace;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            line-height: 1.6;
+        }
+
+        iframe {
+            flex: 1;
+            border: none;
+            background-color: #ffffff;
+        }
+
+        /* Forms, Input and Card Structural Units */
+        .card {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            max-width: 680px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.16);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        input[type="text"], input[type="password"], textarea.form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, textarea.form-input:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: #ffffff;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background-color: #e02253;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        /* Admin Action List Framework elements */
+        .admin-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-dark);
+            padding: 14px 18px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border);
+        }
+
+        /* Custom Content Hosting Layout Grid Systems */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .game-card {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            transition: transform 0.2s;
+        }
+
+        .game-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .game-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        /* Full Frame Sandboxed Playback Windows */
+        .game-player-view {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            height: 100%;
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .game-player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background-color: rgba(255,255,255,0.02);
+            border-bottom: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar Dashboard Controls -->
+    <div class="sidebar">
+        <div class="sidebar-brand">Arcade Hub</div>
+        <button class="nav-btn active" onclick="switchTab('editor')">💻 HTML Editor</button>
+        <button class="nav-btn" onclick="switchTab('games')">🕹️ Hosted Games</button>
+        <button class="nav-btn" onclick="switchTab('admin')">🔒 Admin Panel</button>
+    </div>
+
+    <!-- Main Dynamic Application Screen -->
+    <div class="main-content">
+        <!-- Live System-Wide Global Announcement Banner -->
+        <div class="announcement-banner" id="announcement-banner"></div>
+
+        <!-- WORKSPACE HTML EDITOR IFRAME PANE -->
+        <div id="panel-editor" class="tab-panel active-panel">
+            <h2>Live HTML Workspace</h2>
+            <div class="editor-container">
+                <div class="editor-box">
+                    <div class="box-header">Source Code (HTML/CSS/JS)</div>
+                    <textarea id="editor-textarea" spellcheck="false" placeholder="Write your code here..."></textarea>
+                </div>
+                <div class="preview-box">
+                    <div class="box-header">Live Output View</div>
+                    <iframe id="editor-preview"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOSTED CUSTOM USER APPS TAB -->
+        <div id="panel-games" class="tab-panel">
+            <div id="games-list-view" style="width: 100%;">
+                <h2>Community Hosted Games</h2>
+                <div class="games-grid" id="games-grid">
+                    <!-- Loaded dynamically via application run loops -->
+                </div>
+            </div>
+            
+            <!-- Game Sandbox Shell Window -->
+            <div id="game-player-view" class="game-player-view">
+                <div class="game-player-header">
+                    <span id="playing-game-title" style="font-weight: 700; font-size: 16px;">Game Setup View</span>
+                    <button class="btn btn-small btn-danger" onclick="closeGamePlayer()">Exit Game</button>
+                </div>
+                <iframe id="game-playback-frame" style="flex: 1; background: #ffffff;"></iframe>
+            </div>
+        </div>
+
+        <!-- PASSWORD GATE ADMIN CONTROL WORKSPACE -->
+        <div id="panel-admin" class="tab-panel">
+            <h2>Administrator Controls</h2>
+            
+            <!-- Secure Pass Verification Core Grid -->
+            <div id="admin-auth" class="card">
+                <div class="form-group">
+                    <label for="admin-pass">Enter Security Password:</label>
+                    <input type="password" id="admin-pass" placeholder="••••">
+                </div>
+                <button class="btn" onclick="checkAdminAuth()">Unlock Panel</button>
+            </div>
+
+            <!-- Authenticated Workspace Features -->
+            <div id="admin-dashboard" style="display: none; width: 100%;">
+                
+                <!-- Notice Deployment Box -->
+                <div class="card">
+                    <h3>Post Global Announcement</h3>
+                    <div class="form-group">
+                        <input type="text" id="new-announcement" placeholder="Type system banner update notice here...">
+                    </div>
+                    <button class="btn" onclick="postAnnouncement()">Broadcast Notice</button>
+                </div>
+
+                <!-- Custom Application Hosting Pipeline Box -->
+                <div class="card">
+                    <h3>Publish Custom HTML Game</h3>
+                    <div class="form-group">
+                        <label>Game Title</label>
+                        <input type="text" id="game-name" placeholder="e.g., Space Dodge Alpha">
+                    </div>
+                    <div class="form-group">
+                        <label>Complete HTML/CSS/JS Source Code</label>
+                        <textarea id="game-code" class="form-input" style="height: 180px; font-family: monospace;" spellcheck="false" placeholder="<!DOCTYPE html>\n<html>\n..."></textarea>
+                    </div>
+                    <button class="btn" onclick="publishGame()">Deploy Game Tab Live</button>
+                </div>
+
+                <!-- Live Dynamic Management Feed Logs -->
+                <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                    <div class="card" style="flex: 1; min-width: 300px;">
+                        <h3>Active Announcements</h3>
+                        <div id="admin-announcements-list"></div>
+                    </div>
+                    <div class="card" style="flex: 1; min-width: 300px;">
+                        <h3>Active Uploaded Games</h3>
+                        <div id="admin-games-list"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Execution Runtime Global Storage State Models
+        let announcements = [
+            { id: 1, text: "Welcome to the custom platform! Admins can post updates here." }
+        ];
+        
+        let customGames = [
+            { 
+                id: 1, 
+                title: "Sample Clicker Game", 
+                code: `<!DOCTYPE html><html><head><style>body{font-family:sans-serif;text-align:center;padding:30px;background:#111;color:#fff;}button{padding:15px 25px;font-size:18px;cursor:pointer;background:#00adb5;color:#fff;border:none;border-radius:5px;margin-top:20px; transition: 0.2s;} button:hover{background:#008c9e;}</style></head><body><h2>Mini Clicker Game</h2><p>Score: <span id="score" style="color:#00adb5; font-weight:bold; font-size:24px;">0</span></p><button onclick="hit()">Click Me!</button><script>let s=0;function hit(){s++;document.getElementById('score').innerText=s;}<\/script></body></html>`
+            }
+        ];
+
+        let isAdminAuthenticated = false;
+
+        // Interactive Interface Text Code Setup Handlers
+        const editorTextarea = document.getElementById('editor-textarea');
+        const editorPreview = document.getElementById('editor-preview');
+
+        editorTextarea.addEventListener('input', () => {
+            editorPreview.srcdoc = editorTextarea.value;
+        });
+
+        // Load Default Editor Configuration Template 
+        editorTextarea.value = `<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { font-family: sans-serif; text-align: center; padding-top: 60px; background: #111217; color: #fff; }\n  h1 { color: #00adb5; font-size: 2.5rem; margin-bottom: 10px; }\n  p { color: #8f93a2; font-size: 1.1rem; }\n</style>\n</head>\n<body>\n  <h1>Live Code Playground</h1>\n  <p>Modify this source code and preview changes live right here!</p></body>\n</html>`;
+        editorPreview.srcdoc = editorTextarea.value;
+
+        // Interface Tab Navigation Engine
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active-panel'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`panel-${tabName}`).classList.add('active-panel');
+            event.currentTarget.classList.add('active');
+
+            if(tabName === 'games') {
+                closeGamePlayer();
+            }
+        }
+
+        // Security Authentication Interface Verifier 
+        function checkAdminAuth() {
+            const pin = document.getElementById('admin-pass').value;
+            if(pin === "5867") {
+                isAdminAuthenticated = true;
+                document.getElementById('admin-auth').style.display = 'none';
+                document.getElementById('admin-dashboard').style.display = 'block';
+                renderAdminControls();
+            } else {
+                alert("Incorrect administrative password access denied.");
+            }
+        }
+
+        // Global Graphics Updates Loop Engine
+        function renderGlobalViews() {
+            // Update Announcement Banner Elements
+            const banner = document.getElementById('announcement-banner');
+            if(announcements.length === 0) {
+                banner.style.display = 'none';
+            } else {
+                banner.style.display = 'flex';
+                banner.innerHTML = announcements.map(a => `
+                    <div class="announcement-item">
+                        <span>📢 ${a.text}</span>
+                    </div>
+                `).join('');
+            }
+
+            // Update Community Hosted Games Gallery Cards
+            const grid = document.getElementById('games-grid');
+            grid.innerHTML = customGames.map(g => `
+                <div class="game-card">
+                    <div class="game-title">${g.title}</div>
+                    <button class="btn" onclick="launchGamePlayer(${g.id})">Launch Game</button>
+                </div>
+            `).join('');
+        }
+
+        // Admin Management Internal Screen Updates
+        function renderAdminControls() {
+            if(!isAdminAuthenticated) return;
+
+            // Render active notifications item table lists
+            const aList = document.getElementById('admin-announcements-list');
+            aList.innerHTML = announcements.map(a => `
+                <div class="admin-list-item">
+                    <span style="font-size:14px; max-width:70%; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${a.text}</span>
+                    <button class="btn btn-small btn-danger" onclick="deleteAnnouncement(${a.id})">Delete</button>
+                </div>
+            `).join('');
+
+            // Render managed custom games registry entries
+            const gList = document.getElementById('admin-games-list');
+            gList.innerHTML = customGames.map(g => `
+                <div class="admin-list-item">
+                    <span>🎮 ${g.title}</span>
+                    <button class="btn btn-small btn-danger" onclick="deleteGame(${g.id})">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        // Action Command Post Notification Core
+        function postAnnouncement() {
+            const input = document.getElementById('new-announcement');
+            if(!input.value.trim()) return;
+            
+            announcements.push({
+                id: Date.now(),
+                text: input.value
+            });
+            input.value = '';
+            renderGlobalViews();
+            renderAdminControls();
+        }
+
+        // Action Command Delete Notification Core
+        function deleteAnnouncement(id) {
+            announcements = announcements.filter(item => item.id !== id);
+            renderGlobalViews();
+            renderAdminControls();
+        }
+
+        // Action Command Publish Game Setup Pipeline
+        function publishGame() {
+            const titleInput = document.getElementById('game-name');
+            const codeInput = document.getElementById('game-code');
+
+            if(!titleInput.value.trim() || !codeInput.value.trim()) {
+                alert("Please verify all layout field criteria configurations match requirements.");
+                return;
+            }
+
+            customGames.push({
+                id: Date.now(),
+                title: titleInput.value,
+                code: codeInput.value
+            });
+
+            titleInput.value = '';
+            codeInput.value = '';
+            renderGlobalViews();
+            renderAdminControls();
+            alert("Game layout code successfully compiled and distributed into system library pools!");
+        }
+
+        // Action Command Delete Game Framework Entry
+        function deleteGame(id) {
+            customGames = customGames.filter(g => g.id !== id);
+            renderGlobalViews();
+            renderAdminControls();
+        }
+
+        // Application Sandbox Navigation Engines
+        function launchGamePlayer(id) {
+            const targetGame = customGames.find(g => g.id === id);
+            if(!targetGame) return;
+
+            document.getElementById('games-list-view').style.display = 'none';
+            const playerView = document.getElementById('game-player-view');
+            playerView.style.display = 'flex';
+            
+            document.getElementById('playing-game-title').innerText = `Now Running: ${targetGame.title}`;
+            document.getElementById('game-playback-frame').srcdoc = targetGame.code;
+        }
+
+        function closeGamePlayer() {
+            document.getElementById('game-player-view').style.display = 'none';
+            document.getElementById('games-list-view').style.display = 'block';
+            document.getElementById('game-playback-frame').srcdoc = "";
+        }
+
+        // Start Core Execution Lifecycle Interfaces
+        renderGlobalViews();
+    </script>
+</body>
+</html>
