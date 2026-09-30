@@ -40,17 +40,14 @@
     </style>
 </head>
 <body>
-
     <div class="sidebar">
         <div class="sidebar-brand">ARCADE PLATFORM</div>
         <button class="nav-btn active" onclick="switchTab('editor')">💻 HTML Editor</button>
         <button class="nav-btn" onclick="switchTab('games')">🕹️ Hosted Games</button>
         <button class="nav-btn" onclick="switchTab('admin')">🔒 Admin Panel</button>
     </div>
-
     <div class="main-content">
         <div class="announcement-banner" id="announcement-banner"></div>
-
         <!-- HTML EDITOR PANEL -->
         <div id="panel-editor" class="tab-panel active-panel">
             <h2>Live HTML Workspace</h2>
@@ -76,21 +73,19 @@
                 </div>
                 <button class="btn" onclick="checkGameAuth()">Unlock Games Menu</button>
             </div>
-            
             <div id="game-library-view" style="display: none; width: 100%;">
                 <h2>Community Hosted Games</h2>
                 <div class="games-grid">
                     <div class="game-card">
                         <div class="game-title">Omega Pearl Fight: FINALE</div>
-                        <button class="btn" onclick="openGame('omega.html', 'Omega Pearl Fight: FINALE')">Play Game</button>
+                        <button class="btn" onclick="launchBuiltInGame('omega')">Play Game</button>
                     </div>
                     <div class="game-card">
                         <div class="game-title">Zombie Outbreak Survival</div>
-                        <button class="btn" onclick="openGame('zombie.html', 'Zombie Outbreak Survival')">Play Game</button>
+                        <button class="btn" onclick="launchBuiltInGame('zombie')">Play Game</button>
                     </div>
                 </div>
             </div>
-            
             <div id="game-player-view" class="game-player-view">
                 <div class="game-player-header">
                     <span id="playing-game-title" style="font-weight: bold;">Running Game</span>
@@ -120,7 +115,6 @@
             </div>
         </div>
     </div>
-
     <script>
         let announcements = JSON.parse(localStorage.getItem('v_announcements')) || [];
         let isAdminAuthenticated = false;
@@ -155,36 +149,50 @@
                 isAdminAuthenticated = true;
                 document.getElementById('admin-auth').style.display = 'none';
                 document.getElementById('admin-dashboard').style.display = 'block';
-renderAdminControls();
-} else { alert("Access Denied"); }
-}
-function renderGlobalViews() {
-const banner = document.getElementById('announcement-banner');
-banner.style.display = announcements.length === 0 ? 'none' : 'flex';
-banner.innerHTML = announcements.map(a => <div class="announcement-item"><span>📢 ${a.text}</span></div>).join('');
-}
-function renderAdminControls() {
-if(!isAdminAuthenticated) return;
-document.getElementById('admin-announcements-list').innerHTML = announcements.map(a => <div class="admin-list-item"><span>${a.text}</span><button class="btn btn-small btn-danger" onclick="deleteAnnouncement(${a.id})">Delete</button></div>).join('');
-}
-function postAnnouncement() {
-const input = document.getElementById('new-announcement'); if(!input.value.trim()) return;
-announcements.push({ id: Date.now(), text: input.value });
-input.value = ''; saveState(); renderGlobalViews(); renderAdminControls();
-}
-function deleteAnnouncement(id) {
-announcements = announcements.filter(a => a.id !== id);
-saveState(); renderGlobalViews(); renderAdminControls();
-}
-function openGame(url, title) {
-document.getElementById('game-library-view').style.display = 'none';
-document.getElementById('game-player-view').style.display = 'flex';
-document.getElementById('playing-game-title').innerText = "Running: " + title;
-document.getElementById('game-frame').src = url;
-}
-function closeGame() {
-document.getElementById('game-player-view').style.display = 'none';
-document.getElementById('game-library-view').style.display = 'block';
-document.getElementById('game-frame').src = "";
-}
-renderGlobalViews();
+                renderAdminControls();
+            } else { alert("Access Denied"); }
+        }
+
+        function renderGlobalViews() {
+            const banner = document.getElementById('announcement-banner');
+            banner.style.display = announcements.length === 0 ? 'none' : 'flex';
+            banner.innerHTML = announcements.map(a => `<div class="announcement-item"><span>📢 ${a.text}</span></div>`).join('');
+        }
+
+        function renderAdminControls() {
+            if(!isAdminAuthenticated) return;
+            document.getElementById('admin-announcements-list').innerHTML = announcements.map(a => `<div class="admin-list-item"><span>${a.text}</span><button class="btn btn-small btn-danger" onclick="deleteAnnouncement(${a.id})">Delete</button></div>`).join('');
+        }
+
+        function postAnnouncement() {
+            const input = document.getElementById('new-announcement'); if(!input.value.trim()) return;
+            announcements.push({ id: Date.now(), text: input.value });
+            input.value = ''; saveState(); renderGlobalViews(); renderAdminControls();
+        }
+
+        function deleteAnnouncement(id) {
+            announcements = announcements.filter(a => a.id !== id);
+            saveState(); renderGlobalViews(); renderAdminControls();
+        }
+
+        const builtInGames = {
+            omega: `<!DOCTYPE html><html><body style="background:#000;color:#fff;font-family:sans-serif;text-align:center;padding-top:100px;"><h1>Omega Pearl Fight: FINALE</h1><button style="background:#ff2e63;color:white;border:none;padding:10px 20px;cursor:pointer;font-weight:bold;" onclick="alert('Battle Started!')">Engage Boss</button></body></html>`,
+            zombie: `<!DOCTYPE html><html><body style="margin:0;background:#111;color:#fff;font-family:sans-serif;text-align:center;"><h2>Zombie Outbreak Survival</h2><p id="u">HP: 100 | Score: 0</p><canvas id="c" width="500" height="250" style="background:#000;border:2px solid #ff2e63;display:block;margin:0 auto;"></canvas><script>const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');let hp=100,score=0,px=250,py=125,keys={},z=Math.random;window.addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);window.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);let zm=[];function tick(){ctx.clearRect(0,0,500,250);if(hp<=0){ctx.fillStyle='red';ctx.font='20px sans-serif';ctx.fillText('GAME OVER',200,125);return;}let dx=0,dy=0;if(keys['w']||keys['arrowup'])dy-=3;if(keys['s']||keys['arrowdown'])dy+=3;if(keys['a']||keys['arrowleft'])dx-=3;if(keys['d']||keys['arrowright'])dx+=3;px=Math.max(10,Math.min(490,px+dx));py=Math.max(10,Math.min(240,py+dy));ctx.fillStyle='#00adb5';ctx.beginPath();ctx.arc(px,py,12,0,6.28);ctx.fill();if(zm.length<5&&z()<0.03)zm.push({x:z()*500,y:-10});for(let i=zm.length-1;i>=0;i--){zm[i].y+=1.5;ctx.fillStyle='#4e9f3d';ctx.beginPath();ctx.arc(zm[i].x,zm[i].y,10,0,6.28);ctx.fill();if(zm[i].y>260)zm.splice(i,1);else if(Math.hypot(px-zm[i].x,py-zm[i].y)<22){hp--;score+=5;}}document.getElementById('u').innerText='HP: '+hp+' | Score: '+score;requestAnimationFrame(tick);}tick();<\/script></body></html>`
+        };
+
+        function launchBuiltInGame(type) {
+            document.getElementById('game-library-view').style.display = 'none';
+            document.getElementById('game-player-view').style.display = 'flex';
+            document.getElementById('playing-game-title').innerText = type === 'omega' ? 'Running: Omega Pearl Fight' : 'Running: Zombie Outbreak';
+            document.getElementById('game-frame').srcdoc = builtInGames[type];
+        }
+
+        function closeGame() {
+            document.getElementById('game-player-view').style.display = 'none';
+            document.getElementById('game-library-view').style.display = 'block';
+            document.getElementById('game-frame').srcdoc = "";
+        }
+        renderGlobalViews();
+    </script>
+</body>
+</html>
