@@ -83,6 +83,7 @@
             border-left: 4px solid var(--accent-color);
         }
         .post-meta { font-size: 0.8rem; color: #aaa; margin-top: 5px; }
+
         /* --- Arcade Layout Elements --- */
         .arcade-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; flex-wrap: wrap; }
         .arcade-controls-row { display: flex; align-items: center; gap: 10px; }
@@ -100,16 +101,8 @@
         }
         
         /* Fullscreen API styling overrides */
-        .game-viewport:fullscreen {
-            width: 100vw;
-            height: 100vh;
-            border-radius: 0;
-        }
-        .game-viewport:-webkit-full-screen {
-            width: 100vw;
-            height: 100vh;
-            border-radius: 0;
-        }
+        .game-viewport:fullscreen { width: 100vw; height: 100vh; border-radius: 0; }
+        .game-viewport:-webkit-full-screen { width: 100vw; height: 100vh; border-radius: 0; }
         
         canvas { display: block; background: #111; max-width: 100%; max-height: 100%; }
         
@@ -220,7 +213,6 @@
             </div>
         </div>
     </div>
-
     <script>
         // --- State Registries & Local Settings Sync ---
         let posts = JSON.parse(localStorage.getItem('saved_posts_v3')) || [];
@@ -241,17 +233,11 @@
         // --- Fullscreen Feature Core ---
         function toggleFullscreen() {
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                if (viewport.requestFullscreen) {
-                    viewport.requestFullscreen();
-                } else if (viewport.webkitRequestFullscreen) {
-                    viewport.webkitRequestFullscreen();
-                }
+                if (viewport.requestFullscreen) { viewport.requestFullscreen(); }
+                else if (viewport.webkitRequestFullscreen) { viewport.webkitRequestFullscreen(); }
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
+                if (document.exitFullscreen) { document.exitFullscreen(); }
+                else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
             }
         }
 
@@ -392,7 +378,6 @@
 
         function updatePearlGame() {
             ctx.fillStyle = '#0f111a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
             let dx = mouse.x - pearlState.coreX;
             let dy = mouse.y - pearlState.coreY;
             pearlState.shieldAngle = Math.atan2(dy, dx);
@@ -430,8 +415,9 @@
 
                 if(distance <= pearlState.shieldDist + 5 && distance >= pearlState.shieldDist - 8) {
                     let targetAngle = Math.atan2(p.y - pearlState.coreY, p.x - pearlState.coreX);
-let diff = Math.abs(targetAngle - pearlState.shieldAngle);
-if(diff > Math.PI) diff = Math.PI*2 - diff;
+                    let diff = Math.abs(targetAngle - pearlState.shieldAngle);
+                    if(diff > Math.PI) diff = Math.PI*2 - diff;
+
 if(diff <= pearlState.shieldWidth / 2) {
 pearlState.projectiles.splice(i, 1);
 pearlState.score += 10;
@@ -446,126 +432,96 @@ if(pearlState.health <= 0) endGameSession("Pearl Core Shattered! Score: " + pear
 }
 document.getElementById('gameUI').innerHTML = <span style="color:#00ffff">Health: ${pearlState.health}%</span><span style="color:#ffeb3b">Score: ${pearlState.score}</span>;
 }
-***
-
-### 📦 Chunk 4 of 4: Zombie Outbreak Engine & HTML Closure
-This chunk holds the entire code logic for **Zombie Outbreak** and safely seals off all script arrays, document styling selectors, and container tags.
-
-```javascript
-        // --- ENGINE 2: ZOMBIE OUTBREAK ---
-        let zState;
-        function initZombieGame() {
-            zState = {
-                px: 400, py: 250, pSpeed: 2.8, pSize: 12,
-                zombies: [], bullets: [],
-                score: 0, health: 100, wave: 1, ammo: 12, maxAmmo: 12, reloading: false, reloadTimer: 0, spawnTimer: 0
-            };
-            window.addEventListener('keydown', handleKeyDown); window.addEventListener('keyup', handleKeyUp);
-            canvas.addEventListener('mousemove', handleMouseMove); canvas.addEventListener('mousedown', handleMouseDown);
-            gameInterval = setInterval(updateZombieGame, 1000/60);
-        }
-
-        function triggerManualReload() {
-            if(!zState.reloading && zState.ammo < zState.maxAmmo) { zState.reloading = true; zState.reloadTimer = 0; }
-        }
-
-        function updateZombieGame() {
-            ctx.fillStyle = '#2e3d26'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            if (keys['w'] || keys['arrowup']) zState.py = Math.max(zState.pSize, zState.py - zState.pSpeed);
-            if (keys['s'] || keys['arrowdown']) zState.py = Math.min(canvas.height - zState.pSize, zState.py + zState.pSpeed);
-            if (keys['a'] || keys['arrowleft']) zState.px = Math.max(zState.pSize, zState.px - zState.pSpeed);
-            if (keys['d'] || keys['arrowright']) zState.px = Math.min(canvas.width - zState.pSize, zState.px + zState.pSpeed);
-
-            if(zState.reloading) {
-                zState.reloadTimer++;
-                if(zState.reloadTimer >= 55) { zState.ammo = zState.maxAmmo; zState.reloading = false; }
-            }
-
-            if(mouse.clicked) {
-                mouse.clicked = false;
-                if(!zState.reloading) {
-                    if(zState.ammo > 0) {
-                        zState.ammo--;
-                        let angle = Math.atan2(mouse.y - zState.py, mouse.x - zState.px);
-                        zState.bullets.push({ x: zState.px, y: zState.py, dx: Math.cos(angle)*7.5, dy: Math.sin(angle)*7.5 });
-                    } else { zState.reloading = true; zState.reloadTimer = 0; }
-                }
-            }
-
-            zState.spawnTimer++;
-            let spawnInterval = Math.max(18, 75 - zState.wave * 4);
-            if(zState.spawnTimer > spawnInterval) {
-                zState.spawnTimer = 0;
-                let border = Math.floor(Math.random() * 4);
-                let zx, zy;
-                if(border === 0) { zx = Math.random()*canvas.width; zy = -15; }
-                else if(border === 1) { zx = canvas.width+15; zy = Math.random()*canvas.height; }
-                else if(border === 2) { zx = Math.random()*canvas.width; zy = canvas.height+15; }
-                else { zx = -15; zy = Math.random()*canvas.height; }
-                
-                zState.zombies.push({ x: zx, y: zy, hp: 1 + Math.floor(zState.wave/3), speed: 1.1 + Math.random()*1.1 });
-            }
-
-            ctx.fillStyle = '#ffeb3b';
-            for(let bIdx = zState.bullets.length-1; bIdx >=0; bIdx--) {
-                let b = zState.bullets[bIdx]; b.x += b.dx; b.y += b.dy;
-                ctx.fillRect(b.x-2, b.y-2, 4, 4);
-                if(b.x<0 || b.x>canvas.width || b.y<0 || b.y>canvas.height) zState.bullets.splice(bIdx, 1);
-            }
-
-            for(let zIdx = zState.zombies.length-1; zIdx >= 0; zIdx--) {
-                let z = zState.zombies[zIdx];
-                let zAngle = Math.atan2(zState.py - z.y, zState.px - z.x);
-                z.x += Math.cos(zAngle) * z.speed; z.y += Math.sin(zAngle) * z.speed;
-
-                ctx.beginPath(); ctx.arc(z.x, z.y, 11, 0, Math.PI*2);
-                ctx.fillStyle = '#4caf50'; ctx.fill();
-
-                for(let bIdx = zState.bullets.length-1; bIdx >= 0; bIdx--) {
-                    let b = zState.bullets[bIdx];
-                    if(Math.hypot(b.x - z.x, b.y - z.y) < 13) {
-                        z.hp--; zState.bullets.splice(bIdx, 1);
-                        if(z.hp <= 0) {
-                            zState.zombies.splice(zIdx, 1); zState.score += 20;
-                            if(zState.score % 160 === 0) zState.wave++;
-                            break;
-                        }
-                    }
-                }
-
-                if(zState.zombies[zIdx] && Math.hypot(z.x - zState.px, z.y - zState.py) < 22) {
-                    zState.health -= 0.35;
-                    if(zState.health <= 0) endGameSession("Overrun by Zombies! Reached Wave: " + zState.wave);
-                }
-            }
-
-            ctx.beginPath(); ctx.arc(zState.px, zState.py, zState.pSize, 0, Math.PI*2);
-            ctx.fillStyle = '#00b0ff'; ctx.fill();
-            
-            let lookAngle = Math.atan2(mouse.y - zState.py, mouse.x - zState.px);
-            ctx.beginPath(); ctx.moveTo(zState.px, zState.py);
-            ctx.lineTo(zState.px + Math.cos(lookAngle)*16, zState.py + Math.sin(lookAngle)*16);
-            ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
-
-            let magText = zState.reloading ? "RELOADING..." : `${zState.ammo} / ${zState.maxAmmo}`;
-            document.getElementById('gameUI').innerHTML = `
-                <span style="color:#ff3333">Health: ${Math.max(0, Math.floor(zState.health))}%</span>
-                <span style="color:#4caf50">Wave: ${zState.wave}</span>
-                <span style="color:#ffffff">Ammo: ${magText}</span>
-            `;
-        }
-
-        function endGameSession(summary) {
-            stopGameLoop();
-            document.getElementById('overlayTitle').innerText = "GAME OVER";
-            document.getElementById('overlayDesc').innerText = summary;
-            document.getElementById('gameOverlay').classList.remove('hidden');
-        }
-
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, t => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[t] || t));
-        }
-    </script>
-</body>
-</html>
+// --- ENGINE 2: ZOMBIE OUTBREAK ---
+let zState;
+function initZombieGame() {
+zState = {
+px: 400, py: 250, pSpeed: 2.8, pSize: 12,
+zombies: [], bullets: [],
+score: 0, health: 100, wave: 1, ammo: 12, maxAmmo: 12, reloading: false, reloadTimer: 0, spawnTimer: 0
+};
+window.addEventListener('keydown', handleKeyDown); window.addEventListener('keyup', handleKeyUp);
+canvas.addEventListener('mousemove', handleMouseMove); canvas.addEventListener('mousedown', handleMouseDown);
+gameInterval = setInterval(updateZombieGame, 1000/60);
+}
+function triggerManualReload() {
+if(!zState.reloading && zState.ammo < zState.maxAmmo) { zState.reloading = true; zState.reloadTimer = 0; }
+}
+function updateZombieGame() {
+ctx.fillStyle = '#2e3d26'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+if (keys['w'] || keys['arrowup']) zState.py = Math.max(zState.pSize, zState.py - zState.pSpeed);
+if (keys['s'] || keys['arrowdown']) zState.py = Math.min(canvas.height - zState.pSize, zState.py + zState.pSpeed);
+if (keys['a'] || keys['arrowleft']) zState.px = Math.max(zState.pSize, zState.px - zState.pSpeed);
+if (keys['d'] || keys['arrowright']) zState.px = Math.min(canvas.width - zState.pSize, zState.px + zState.pSpeed);
+if(zState.reloading) {
+zState.reloadTimer++;
+if(zState.reloadTimer >= 55) { zState.ammo = zState.maxAmmo; zState.reloading = false; }
+}
+if(mouse.clicked) {
+mouse.clicked = false;
+if(!zState.reloading) {
+if(zState.ammo > 0) {
+zState.ammo--;
+let angle = Math.atan2(mouse.y - zState.py, mouse.x - zState.px);
+zState.bullets.push({ x: zState.px, y: zState.py, dx: Math.cos(angle)*7.5, dy: Math.sin(angle)*7.5 });
+} else { zState.reloading = true; zState.reloadTimer = 0; }
+}
+}
+zState.spawnTimer++;
+let spawnInterval = Math.max(18, 75 - zState.wave * 4);
+if(zState.spawnTimer > spawnInterval) {
+zState.spawnTimer = 0;
+let border = Math.floor(Math.random() * 4);
+let zx, zy;
+if(border === 0) { zx = Math.random()*canvas.width; zy = -15; }
+else if(border === 1) { zx = canvas.width+15; zy = Math.random()*canvas.height; }
+else if(border === 2) { zx = Math.random()*canvas.width; zy = canvas.height+15; }
+else { zx = -15; zy = Math.random()*canvas.height; }
+zState.zombies.push({ x: zx, y: zy, hp: 1 + Math.floor(zState.wave/3), speed: 1.1 + Math.random()*1.1 });
+}
+ctx.fillStyle = '#ffeb3b';
+for(let bIdx = zState.bullets.length-1; bIdx >=0; bIdx--) {
+let b = zState.bullets[bIdx]; b.x += b.dx; b.y += b.dy;
+ctx.fillRect(b.x-2, b.y-2, 4, 4);
+if(b.x<0 || b.x>canvas.width || b.y<0 || b.y>canvas.height) zState.bullets.splice(bIdx, 1);
+}
+for(let zIdx = zState.zombies.length-1; zIdx >= 0; zIdx--) {
+let z = zState.zombies[zIdx];
+let zAngle = Math.atan2(zState.py - z.y, zState.px - z.x);
+z.x += Math.cos(zAngle) * z.speed; z.y += Math.sin(zAngle) * z.speed;
+ctx.beginPath(); ctx.arc(z.x, z.y, 11, 0, Math.PI*2);
+ctx.fillStyle = '#4caf50'; ctx.fill();
+for(let bIdx = zState.bullets.length-1; bIdx >= 0; bIdx--) {
+let b = zState.bullets[bIdx];
+if(Math.hypot(b.x - z.x, b.y - z.y) < 13) {
+z.hp--; zState.bullets.splice(bIdx, 1);
+if(z.hp <= 0) {
+zState.zombies.splice(zIdx, 1); zState.score += 20;
+if(zState.score % 160 === 0) zState.wave++;
+break;
+}
+}
+}
+if(zState.zombies[zIdx] && Math.hypot(z.x - zState.px, z.y - zState.py) < 22) {
+zState.health -= 0.35;
+if(zState.health <= 0) endGameSession("Overrun by Zombies! Reached Wave: " + zState.wave);
+}
+}
+ctx.beginPath(); ctx.arc(zState.px, zState.py, zState.pSize, 0, Math.PI*2);
+ctx.fillStyle = '#00b0ff'; ctx.fill();
+let lookAngle = Math.atan2(mouse.y - zState.py, mouse.x - zState.px);
+ctx.beginPath(); ctx.moveTo(zState.px, zState.py);
+ctx.lineTo(zState.px + Math.cos(lookAngle)*16, zState.py + Math.sin(lookAngle)*16);
+ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
+let magText = zState.reloading ? "RELOADING..." : ${zState.ammo} / ${zState.maxAmmo};
+document.getElementById('gameUI').innerHTML = <span style="color:#ff3333">Health: ${Math.max(0, Math.floor(zState.health))}%</span> <span style="color:#4caf50">Wave: ${zState.wave}</span> <span style="color:#ffffff">Ammo: ${magText}</span>;
+}
+function endGameSession(summary) {
+stopGameLoop();
+document.getElementById('overlayTitle').innerText = "GAME OVER";
+document.getElementById('overlayDesc').innerText = summary;
+document.getElementById('gameOverlay').classList.remove('hidden');
+}
+function escapeHTML(str) {
+return str.replace(/[&<>'"]/g, t => ({ '&': '&', '<': '<', '>': '>', "'": ''', '"': '"' }[t] || t));
+}
